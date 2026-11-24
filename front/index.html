@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Risco de crédito – Portal</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">
+      <span class="logo" aria-hidden="true">RC</span>
+      <div>
+        <h1>Risco de crédito</h1>
+        <p>Estimativa de inadimplência para apoio à decisão de crédito</p>
+      </div>
+    </div>
+    <nav class="abas">
+      <button data-aba="simulacao" class="ativa">Calcular risco</button>
+      <button data-aba="historico">Histórico</button>
+      <button data-aba="base">Base histórica</button>
+    </nav>
+  </header>
+
+  <main class="conteudo">
+    <!-- Simulação -->
+    <section id="simulacao" class="aba">
+      <div class="grid-2">
+        <div class="card">
+          <h2>Dados do solicitante</h2>
+          <form id="form-risco" class="form-grid">
+            <button type="submit" id="btn-calcular" class="btn-primario">Calcular risco</button>
+          </form>
+        </div>
+
+        <div class="card resultado-card">
+          <h2>Resultado</h2>
+          <div id="estado-inicial" class="placeholder">
+            Preencha os dados ao lado e calcule o risco para ver o resultado aqui.
+          </div>
+          <div id="resultado-box" hidden>
+            <span id="badge-risco" class="badge"></span>
+            <p class="probabilidade"><span id="resultado"></span></p>
+            <div class="barra-prob"><div id="prob-fill"></div></div>
+            <p class="legenda">Probabilidade estimada de inadimplência</p>
+          </div>
+          <div class="acoes-resultado">
+            <button type="button" id="btn-salvar" class="btn-secundario" disabled>Salvar no histórico</button>
+            <p id="status-salvo" aria-live="polite"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Histórico -->
+    <section id="historico" class="aba" hidden>
+      <div class="cabecalho-secao">
+        <div>
+          <h2>Histórico de simulações</h2>
+          <p class="intro">Cada registro mostra a data da execução e todos os dados usados no cálculo.</p>
+        </div>
+        <button type="button" id="btn-atualizar-historico" class="btn-secundario">Atualizar</button>
+      </div>
+      <div id="lista-historico" class="lista-historico"></div>
+    </section>
+
+    <!-- Base histórica -->
+    <section id="base" class="aba" hidden>
+      <div id="resumo-base" class="cards"></div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h2>Taxa de maus pagadores por categoria</h2>
+          <label class="campo">Campo
+            <select id="select-campo-taxa"></select>
+          </label>
+          <div id="grafico-taxas" class="grafico"></div>
+        </div>
+        <div class="card">
+          <h2>Distribuição numérica</h2>
+          <label class="campo">Campo
+            <select id="select-campo-dist"></select>
+          </label>
+          <div id="grafico-dist" class="grafico"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Registros da base</h2>
+        <form id="form-filtros" class="filtros">
+          <label class="campo">Finalidade
+            <select id="filtro-finalidade"></select>
+          </label>
+          <label class="campo">Classificação
+            <select id="filtro-risco">
+              <option value="">Todos</option>
+              <option value="0">Bons pagadores</option>
+              <option value="1">Maus pagadores</option>
+            </select>
+          </label>
+          <label class="campo">Idade mínima <input type="number" id="filtro-idade-min" min="18" max="100"></label>
+          <label class="campo">Idade máxima <input type="number" id="filtro-idade-max" min="18" max="100"></label>
+          <label class="campo">Valor mínimo (DM) <input type="number" id="filtro-valor-min" min="0"></label>
+          <label class="campo">Valor máximo (DM) <input type="number" id="filtro-valor-max" min="0"></label>
+          <div class="acoes">
+            <button type="submit" class="btn-primario">Filtrar</button>
+            <button type="button" id="btn-limpar-filtros" class="btn-secundario">Limpar</button>
+          </div>
+        </form>
+
+        <div class="tabela-wrap">
+          <table id="tabela-registros">
+            <thead>
+              <tr>
+                <th>Conta corrente</th>
+                <th>Prazo (meses)</th>
+                <th>Histórico</th>
+                <th>Finalidade</th>
+                <th>Valor (DM)</th>
+                <th>Emprego</th>
+                <th>Idade</th>
+                <th>Classificação</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="paginacao">
+          <button type="button" id="btn-anterior" class="btn-secundario">Anterior</button>
+          <span id="info-pagina"></span>
+          <button type="button" id="btn-proxima" class="btn-secundario">Próxima</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/comum.js"></script>
+  <script src="js/simulacao.js"></script>
+  <script src="js/historico.js"></script>
+  <script src="js/base.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
