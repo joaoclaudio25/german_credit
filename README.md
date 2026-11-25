@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Risco de crédito – classificação de inadimplência
 
 MVP da disciplina **Engenharia de Software para Sistemas Inteligentes**.
@@ -115,13 +114,14 @@ O notebook deve rodar do início ao fim, sem erros, em um ambiente limpo.
 | 9. Otimização | Uma linha por modelo com o melhor ROC AUC na validação e os hiperparâmetros escolhidos. |
 | 10. Avaliação | Tabela de métricas no teste e contagem de acertos e erros de cada modelo. |
 | 11. Comparação | Dois gráficos: curvas ROC e barras de validação x teste. |
-| 12. Exportação | `Modelo escolhido pela validação cruzada: SVM` e a mensagem de arquivo salvo. |
-| 13. Teste do modelo | `Idênticas: True` e as etapas `['prep', 'clf']`. |
+| 12. Modelo monotônico | `ROC AUC no teste` e as probabilidades ao variar emprego, prazo e valor. |
+| 13. Exportação | `Modelo exportado: HistGradientBoosting com restrições de monotonicidade` e a mensagem de arquivo salvo. |
+| 14. Teste do modelo | `Idênticas: True` e as etapas `['prep', 'clf']`. |
 
 **Valores de referência** (execução de controle, com scikit-learn 1.9.1):
 
-- Validação cruzada, após otimização: SVM 0,792, Naive Bayes 0,772, regressão logística 0,770, KNN 0,766 e árvore 0,729.
-- Teste (ROC AUC): regressão logística 0,817, Naive Bayes 0,801, SVM 0,797, KNN 0,779 e árvore 0,732.
+- Validação cruzada, após otimização: SVM 0,792, modelo monotônico 0,788, Naive Bayes 0,772, regressão logística 0,770, KNN 0,766 e árvore 0,729.
+- Teste (ROC AUC): regressão logística 0,817, Naive Bayes 0,801, SVM 0,797, modelo monotônico 0,783, KNN 0,779 e árvore 0,732.
 
 Pequenas diferenças são esperadas entre versões do scikit-learn. A ordem geral dos resultados deve se manter. A semente fixa (`SEED = 42`) faz com que, na mesma versão, os números sejam sempre os mesmos.
 
@@ -211,7 +211,8 @@ Exemplo de corpo para `POST /api/predict`:
 | Modelagem com KNN, árvore de classificação, Naive Bayes e SVM | Seção 8 |
 | Otimização de hiperparâmetros | Seção 9 |
 | Avaliação e comparação dos modelos | Seções 10 e 11 |
-| Exportação do modelo resultante | Seções 12 e 13 |
+| Modelo com restrições de monotonicidade (lógica previsível) | Seção 12 |
+| Exportação do modelo resultante | Seções 13 e 14 |
 | Uso de validação cruzada (recomendado) | Seção 7, usada nas seções 8 e 9 |
 | Uso de pipelines (recomendado) | Seção 6, função `criar_pipeline` |
 
@@ -219,21 +220,22 @@ Exemplo de corpo para `POST /api/predict`:
 
 ## 9. Principais achados
 
-- **A conta corrente é o sinal mais forte.** Só essa variável, com a taxa de maus pagadores por categoria, já dá ROC AUC de 0,743 no teste.
-- **Os modelos aprendem mais que essa regra simples,** mas o ganho é modesto. O melhor ROC AUC no teste foi de 0,817.
-- **A otimização de hiperparâmetros ajudou,** sobretudo o Naive Bayes, que subiu de 0,709 para 0,772 na validação cruzada.
-- **A árvore de decisão foi a mais fraca,** com ROC AUC de 0,732 no teste.
+- **Os algoritmos têm desempenho próximo.** Na validação cruzada, SVM, modelo monotônico, Naive Bayes, regressão logística e KNN ficam entre 0,766 e 0,792. A árvore de decisão foi a mais fraca, com 0,729.
+- **O modelo exportado tem restrições de monotonicidade** em emprego, prazo e valor: o risco sobe com prazo e valor e cai com mais tempo no emprego. Custa cerca de 0,004 de ROC AUC na validação cruzada em relação ao SVM.
+- **Restringir conta e histórico na direção intuitiva derrubou a ROC AUC para cerca de 0,70.** Por isso essas variáveis ficaram livres, e seus efeitos seguem os dados.
+- **Os resultados contraintuitivos vêm dos dados.** Solicitantes sem conta corrente têm 11,7% de maus pagadores, contra 22% dos que têm mais de 200 DM. Conta crítica tem 17%. Esses padrões podem refletir viés de seleção, pois a base contém apenas empréstimos aprovados.
 
 ---
 
 ## 10. Pontos de atenção e limitações
 
-- **As diferenças entre os três melhores modelos estão dentro da margem de erro.** O teste tem apenas 60 maus pagadores, e o desvio-padrão da ROC AUC entre as partições é de cerca de 0,04. A escolha do SVM foi feita pela validação cruzada, que usa mais dados, e não pelo resultado do teste.
-- **O limiar de 0,5 não é adequado para o SVM.** No teste, o SVM detecta apenas 45% dos maus pagadores com esse limiar, contra 78% da regressão logística. A ordenação de risco é boa, mas o limiar precisa refletir o custo de cada tipo de erro. Essa é uma decisão de negócio.
+- **As diferenças entre os melhores modelos estão dentro da margem de erro.** O teste tem apenas 60 maus pagadores, e o desvio-padrão da ROC AUC entre as partições é de cerca de 0,04. O modelo monotônico foi escolhido por exigência de lógica previsível, e não pelo resultado do teste. No teste, ele fica abaixo da regressão logística e do SVM.
+- **O limiar de 0,5 precisa refletir o custo dos erros.** Com esse limiar, o modelo monotônico detecta 68% dos maus pagadores no teste, com precisão de 50%. A regressão logística detecta 78%, e o SVM, 45%. Essa é uma decisão de negócio.
 - **Atributos sensíveis foram excluídos** (`personal_status_sex` e `foreign_worker`). Isso evita discriminação por sexo ou nacionalidade, mas pode reduzir um pouco o desempenho. A decisão deve constar na documentação de uso.
 - **A base é antiga e pequena.** Os dados são de 1994, com 1000 registros, em marco alemão. Um uso real exigiria dados atuais e validação em produção.
 - **Não há autenticação no portal,** e o histórico contém dados financeiros de solicitantes. Para uso fora de um ambiente controlado, é preciso adicionar login e tratar esses dados conforme a LGPD.
-- **O modelo na API ainda é o da regressão logística,** exportado nas etapas anteriores. Para usar o SVM na aplicação, rode o notebook, copie o arquivo exportado para `api/model/` e alinhe a versão do scikit-learn.
+- **O arquivo em `api/model/` precisa ser o exportado pela versão atual do notebook,** com restrições de monotonicidade (seção 13 do notebook). Para conferir, o `monotonic_cst` do classificador não pode ser `None`. A versão do scikit-learn usada na exportação deve ser a mesma de `requirements.txt`.
+- **A API não lê mais as categorias do modelo.** Os códigos válidos estão fixos em `api/app.py`, o que evita depender da estrutura interna do pipeline.
 
 ---
 
@@ -242,28 +244,3 @@ Exemplo de corpo para `POST /api/predict`:
 - Hofmann, H. (1994). *Statlog (German Credit Data)*. UCI Machine Learning Repository. https://doi.org/10.24432/C5NC77
 - UCI Machine Learning Repository, dataset 144: https://archive.ics.uci.edu/dataset/144/statlog+german+credit+data
 - Documentação do scikit-learn: https://scikit-learn.org/stable/
-=======
-# German Credit Data (Statlog)
-
-Cópia em CSV, com cabeçalho e alvo binário, do dataset **Statlog (German Credit Data)** da UCI Machine Learning Repository.
-
-- **Fonte:** Hofmann, H. (1994). Statlog (German Credit Data). UCI Machine Learning Repository. https://doi.org/10.24432/C5NC77
-- **Licença:** CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Ao reutilizar, dê o crédito acima.
-- **Registros:** 1.000 solicitações de crédito, 20 atributos e 1 alvo.
-
-## Arquivo
-
-`german_credit.csv`: versão do arquivo original `german.data` com as seguintes mudanças:
-
-- Cabeçalho com nomes de colunas em inglês.
-- Código original do alvo convertido: `credit_risk = 1` para mau pagador (classe original 2), `credit_risk = 0` para bom pagador (classe original 1).
-- Os valores categóricos foram mantidos com os códigos originais (por exemplo, `A11`). A descrição de cada código está no documento original da UCI.
-
-## Matriz de custo
-
-A UCI indica que classificar um mau pagador como bom custa 5 vezes mais do que o inverso (custo 5 contra custo 1).
-
-## Observação
-
-A versão Statlog tem erros de codificação relatados na própria UCI. Este repositório não corrige esses erros.
->>>>>>> fa4b8313539ba85fb524ce1195387ca393f0aaf5

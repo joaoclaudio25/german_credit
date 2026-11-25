@@ -24,10 +24,14 @@ FEATURES_CAT = ["status_checking_account", "credit_history", "purpose",
 FEATURES_NUM = ["duration_months", "credit_amount", "age"]
 FEATURES = FEATURES_CAT + FEATURES_NUM
 
-# Códigos aceitos para cada categórica, lidos do próprio modelo treinado.
-_encoder = model.named_steps["prep"].named_transformers_["cat"]
+# Códigos aceitos para cada categórica (códigos do dataset German Credit).
+# Ficam fixos aqui, e não lidos do modelo, para a API não depender da estrutura interna do pipeline.
 CATEGORIAS_VALIDAS = {
-    campo: set(cats) for campo, cats in zip(FEATURES_CAT, _encoder.categories_)
+    "status_checking_account": {"A11", "A12", "A13", "A14"},
+    "credit_history": {"A30", "A31", "A32", "A33", "A34"},
+    "purpose": {"A40", "A41", "A410", "A42", "A43", "A44", "A45", "A46", "A48", "A49"},
+    "savings_account": {"A61", "A62", "A63", "A64", "A65"},
+    "employment_since": {"A71", "A72", "A73", "A74", "A75"},
 }
 
 CAMPOS_BASE_CATEGORICOS = [c for c in base.columns if not pd.api.types.is_numeric_dtype(base[c])]
